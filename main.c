@@ -3,33 +3,36 @@
 #include "file_system.h"
 #include "commands.h"
 
-#define LINE_SIZE 128
-#define COMMAND_SIZE 16
-#define PATHNAME 64
-
-extern char *commands[]; 
 void unixTreeSimulator(FileSystem *fs){
     // declare the varaibles
-    char line[LINE_SIZE] = "";
-    char command[COMMAND_SIZE] = "", pathName[PATHNAME] = "";
-
+  
     int quit_flag = 1;
     while (quit_flag)
-    {
-        printf("user@machine ");
-        pwd_(fs);
+    {   
+        char line[128];
+        char command[16], pathName[64];
+        printf("user@machine");
+        pwd_(fs->cwd);
         printf(" %% ");
-        if(!fgets(line, strlen(line), stdin)){
+        if(!fgets(line, sizeof(line), stdin)){
             puts("Error reading command!");
             continue;
         }
-
         // push the commmand and pathname
         sscanf(line, "%s %s", command, pathName);
-        int cmdIndex = findCmd(command, commands);
+        int cmdIndex = findCmd(command);
         switch(cmdIndex){
-            case 0: rmdir_(fs, pathName); break;
-            case 1: mkdir_(fs, pathName); break;
+            case 0: mkdir_(fs, pathName); break;
+            case 1: rmdir_(fs, pathName); break;
+            case 2: ls_(fs, pathName); break;
+            case 3: cd_(fs, pathName); break;
+            case 4: pwd_(fs->cwd); break;
+            case 5: creat(fs, pathName); break;
+            case 6: rm_(fs, pathName); break;
+            case 7: reload(fs, pathName); break;
+            case 8: save(fs, pathName); break;
+            case 9: menu_(); break;
+            case 10: quit(fs); break;
             default: quit_flag = 0; break;
         }
         
@@ -38,9 +41,9 @@ void unixTreeSimulator(FileSystem *fs){
 }
 
 int main(){
-    FileSystem *fs;
-    initialize(fs);
-    unixTreeSimulator(fs);
+    FileSystem fs;
+    initialize(&fs);
+    unixTreeSimulator(&fs);
     return 0;
 }
 

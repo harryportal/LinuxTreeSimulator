@@ -25,11 +25,10 @@ Node* newNode(const char *basename, const nodeType type);
 void initialize(FileSystem *fs);
 
 // extract directory and base from a pathname
-void dbname(char *pathname, char *dname, char *bname);
+void dbname(const char *pathname, char *dname, char *bname);
 
 // search for a node given a directory path
-Node* searchDir(FileSystem *fs, char *pathname);
+Node* searchNode(FileSystem *fs, const char *pathname);
 
 
-
-#endif filesystem_h
+#endif

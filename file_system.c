@@ -24,11 +24,15 @@ void dbname(const char *pathName, char *dName, char *bName){
     strcpy(bName, basename(temp));
 }
 
-Node* searchNode(FileSystem *fs, const char *pathname){
+Node* searchDir(FileSystem *fs, const char *pathname, const char *cmd){
     // check for cases to just simply return the cwd or root.
-    if(!pathname || !strcmp(pathname, ".")) return fs->cwd;
-    if(!strcmp(pathname, "/")) return fs->root;
-   
+    if(!pathname || !strcmp(pathname, ".")){
+        return fs->cwd;
+    } 
+    if(!strcmp(pathname, "/")){
+        return fs->root;
+    } 
+
     // where do we start the search from? cwd or root?
     Node* curr = fs->cwd;
     if(pathname[0]=='/') curr = fs->root;
@@ -46,6 +50,17 @@ Node* searchNode(FileSystem *fs, const char *pathname){
         s = strtok(NULL, "/");
     }
 
-    return (curr != fs->cwd || curr != fs->root)?curr:NULL;
+    if(curr == fs->cwd || curr == fs->root){
+        curr = NULL;
+    }
+    
+    if(!curr){
+        printf("%s: %s: Directory does not exist\n", cmd, pathname);
+    }
 
+    if(curr->type != DIR){
+        printf("%s: %s: Not a directory\n", cmd, pathname);
+    }
+
+    return curr;
 }

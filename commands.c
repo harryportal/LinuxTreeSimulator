@@ -23,20 +23,27 @@ int cd_(FileSystem *fs, const char *pathname){
     }
 
     char dname[ARR_S], bname[ARR_S]; 
-    dbname(pathname, dname, bname);
+    dbname(pathname, dname, bname); 
 
-    Node *parentDir = searchNode(fs, dname);
-    if(!parentDir){
-        printf("cd: %s: Directory does not exist\n", dname);
-        return 1;
-    }
+    Node *parentDir = searchDir(fs,  dname, "cd");
+    if(!parentDir) return 1;
 
     Node *pointer = NULL;
-
     // base directory could be empty
     if(strcmp(bname, "") != 0 && strcmp(bname, "/") != 0){
         pointer = parentDir->childPtr;
-        while(pointer && strcmp(pointer->name, bname) != 0){
+        while(pointer){
+            if(strcmp(pointer->name, bname) == 0){
+                // could be a file but let's not judge till we've exhausted our search
+                if(pointer->type != DIR && !pointer->siblingPtr){
+                    printf("cd: %s: Not a directory\n", bname);
+                    return 1;
+                }
+                if(pointer->type == DIR){
+                    fs->cwd = pointer;
+                    return 0;
+                }
+            }
             pointer = pointer->siblingPtr;
         }
 
@@ -44,17 +51,6 @@ int cd_(FileSystem *fs, const char *pathname){
             printf("cd: %s: Directory does not exist\n", bname);
             return 1;
         }
-
-        // only return this error if 
-        if(pointer->type != DIR && !pointer->siblingPtr){
-            printf("cd: %s: Not a directory\n", bname);
-            return 1;
-        }
-
-        // handle case where a directory and a file have the same name
-        // and the file is created first - the pointer stops at the file since
-        // they have the same and exits the while loop.
-        while(pointer && strcmp(pointer->name, bname) != 0) pointer = pointer->siblingPtr; 
     }
 
     fs->cwd = pointer? pointer:parentDir;
@@ -62,26 +58,17 @@ int cd_(FileSystem *fs, const char *pathname){
 }
 
 int mkdir_(FileSystem *fs, const char *pathname){
-    // Input validation
     if(strlen(pathname) == 0){
         puts("usage: mkdir <pathname>");
         return 1;
     }
 
-    // Path Splitting
     char dname[ARR_S], bname[ARR_S]; 
     dbname(pathname, dname, bname);
 
-    Node *parentDir = searchNode(fs, dname);
-    if(parentDir == NULL){
-        printf("mkdir: %s: No such file or directory\n", dname);
-        return 1;
-    }
-    if(parentDir->type != DIR){
-        printf("mkdir: %s: Not a directory\n", dname);
-        return 1;
-    }
-
+    Node *parentDir = searchDir(fs,  dname, "mkdir");
+    if(!parentDir) return 1;
+    
     Node *curr = parentDir->childPtr, *prev = NULL;
     while(curr){ 
         if(strcmp(curr->name, bname) == 0 && curr->type == DIR){
@@ -95,6 +82,7 @@ int mkdir_(FileSystem *fs, const char *pathname){
     Node *newDirNode = newNode(bname, DIR);
 
     if(!prev){
+        printf("This is a file!");
         parentDir->childPtr = newDirNode;
     }else {
         prev->siblingPtr = newDirNode; // prev points to the last node at this point.
@@ -113,15 +101,8 @@ int creat(FileSystem *fs, const char *pathname){
     char dname[ARR_S], bname[ARR_S]; 
     dbname(pathname, dname, bname);
 
-    Node *parentDir = searchNode(fs, dname);
-    if(parentDir == NULL){
-        printf("create: %s: No such file or directory\n", dname);
-        return 1;
-    }
-    if(parentDir->type != DIR){
-        printf("create: %s: Not a directory\n", dname);
-        return 1;
-    }
+    Node *parentDir = searchDir(fs,  dname, "create");
+    if(!parentDir) return 1;
 
     Node *curr = parentDir->childPtr, *prev = NULL;
     while(curr){ 
@@ -145,7 +126,6 @@ int creat(FileSystem *fs, const char *pathname){
 }
 
 int rmdir_(FileSystem *fs, const char *pathname){
-    // input validation
     if(strlen(pathname) == 0){
         puts("usage: rmdir <pathname>");
         return 1;
@@ -154,16 +134,8 @@ int rmdir_(FileSystem *fs, const char *pathname){
     char dname[ARR_S], bname[ARR_S];
     dbname(pathname, dname, bname);
 
-    Node *parentDir = searchNode(fs, dname);
-    
-    if(parentDir == NULL){
-        printf("rmdir: %s: No such file or directory\n", dname);
-        return 1;
-    }
-    if(parentDir->type != DIR){
-        printf("rmdir: %s: Not a directory\n", dname);
-        return 1;
-    }
+    Node *parentDir = searchDir(fs,  dname, "rmdir");
+    if(!parentDir) return 1;
 
     Node *target = parentDir->childPtr, *prev = NULL;
     while (target) {
@@ -223,16 +195,8 @@ int rm_(FileSystem *fs, const char *pathname){
     char dname[ARR_S], bname[ARR_S];
     dbname(pathname, dname, bname);
 
-    Node *parentDir = searchNode(fs, dname);
-    
-    if(parentDir == NULL){
-        printf("rm: %s: No such file or directory\n", dname);
-        return 1;
-    }
-    if(parentDir->type != DIR){
-        printf("rm: %s: Not a directory\n", dname);
-        return 1;
-    }
+    Node *parentDir = searchDir(fs,  dname, "rm");
+    if(!parentDir) return 1;
 
     Node *target = parentDir->childPtr, *prev = NULL;
     while (target) {
@@ -311,15 +275,8 @@ int ls_(FileSystem *fs, const char *pathname){
     char dname[ARR_S], bname[ARR_S];
     dbname(pathname, dname, bname);
 
-    Node *parentDir = searchNode(fs, dname);
-    if(!parentDir){
-        printf("ls: %s: No such file or directory\n", dname);
-        return 1;
-    }
-    if(parentDir->type != DIR){
-        printf("ls: %s: Not a directory\n", dname);
-        return 1;
-    }
+    Node *parentDir = searchDir(fs,  dname, "ls");
+    if(!parentDir) return 1;
     
     Node *pointer = parentDir;
     if(strcmp(bname, ".") != 0 && strcmp(bname, "/") != 0){

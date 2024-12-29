@@ -27,8 +27,9 @@ void initialize(FileSystem *fs);
 // extract directory and base from a pathname
 void dbname(const char *pathname, char *dname, char *bname);
 
-// search for a node given a directory path
-Node* searchNode(FileSystem *fs, const char *pathname);
+// search for a node given a directory path, output error with specified command name<cmd>
+// the node is specified here as an output parameter
+Node* searchDir(FileSystem *fs, const char *pathname, const char *cmd);
 
 
 #endif

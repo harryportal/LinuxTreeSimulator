@@ -5,7 +5,7 @@
 #include <libgen.h>
 
 const char *commands[] = {"mkdir", "rmdir", "ls", "cd", "pwd", "creat",
-                         "rm", "reload", "save", "menu", "quit", NULL};
+                         "rm", "reload", "save", "menu", "quit"};
 
 int cd_(FileSystem *fs, const char *pathname){
     if (!pathname || strcmp(pathname, "") == 0){
@@ -376,9 +376,9 @@ int reload(FileSystem *fs, const char *filename){
     return 0;
 }
 
-int findCmd(char *cmdName){
+int findCmd(const char *cmdName){
     int len_cmds = sizeof(commands) / sizeof(commands[0]);
-    for ( int i = 0; i < len_cmds; i++){
+    for( int i = 0; i < len_cmds; i++){
         if(strcmp(cmdName, commands[i]) == 0){
             return i;
         }

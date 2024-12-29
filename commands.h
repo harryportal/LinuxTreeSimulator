@@ -8,7 +8,7 @@
 
 /* check if specified command name exists in list of 
 available commands.*/
-int findCmd(char *cmdName);
+int findCmd(const char *cmdName);
 int mkdir_(FileSystem *fs, const char *pathname);
 int rmdir_(FileSystem *fs, const char *pathname);
 int cd_(FileSystem *fs, const char *pathname);

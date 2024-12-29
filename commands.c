@@ -35,10 +35,17 @@ int cd_(FileSystem *fs, const char *pathname){
             printf("cd: %s: Directory does not exist\n", bname);
             return 1;
         }
-        if(pointer->type != DIR){
+
+        // only return this error if 
+        if(pointer->type != DIR && !pointer->siblingPtr){
             printf("cd: %s: Not a directory\n", bname);
             return 1;
         }
+
+        // handle case where a directory and a file have the same name
+        // and the file is created first - the pointer stops at the file since
+        // they have the same and exits the while loop.
+        while(pointer && strcmp(pointer->name, bname) != 0) pointer = pointer->siblingPtr; 
     }
 
     fs->cwd = pointer? pointer:parentDir;
@@ -280,17 +287,16 @@ int ls_(FileSystem *fs, const char *pathname){
         printf("ls: %s: Not a directory\n", dname);
         return 1;
     }
-
+    
     Node *pointer = parentDir;
-
-    if(strcmp(pointer->name, ".") != 0 && strcmp(pointer->name, "/") != 0){
+    if(strcmp(bname, ".") != 0 && strcmp(bname, "/") != 0){
         pointer = pointer->childPtr;
         while(pointer && strcmp(pointer->name, bname) != 0) pointer = pointer->siblingPtr;
-    }
 
-    if(!pointer){
-        printf("ls: %s: No such file or directory\n", bname);
-        return 1;
+        if(!pointer){
+            printf("ls: %s: No such file or directory\n", bname);
+            return 1;
+        }
     }
 
     if(pointer->type == DIR){

@@ -9,8 +9,8 @@ void unixTreeSimulator(FileSystem *fs){
     int quit_flag = 1;
     while (quit_flag)
     {   
-        char line[128];
-        char command[16], pathName[64];
+        char line[128]="";
+        char command[16] ="", pathName[64]="";
         printf("user@machine");
         pwd_(fs->cwd);
         printf(" %% ");

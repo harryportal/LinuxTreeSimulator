@@ -26,13 +26,15 @@ void unixTreeSimulator(FileSystem *fs){
             case 1: rmdir_(fs, pathName); break;
             case 2: ls_(fs, pathName); break;
             case 3: cd_(fs, pathName); break;
-            case 4: pwd_(fs->cwd); break;
+            case 4: 
+                pwd_(fs->cwd); 
+                printf("\n"); break;
             case 5: creat(fs, pathName); break;
             case 6: rm_(fs, pathName); break;
-            case 7: reload(fs, pathName); break;
-            case 8: save(fs, pathName); break;
+            case 7: reload(fs, "DefaultFile.txt"); break;
+            case 8: save(fs, "DefaultFile.txt"); break;
             case 9: menu_(); break;
-            case 10: quit(fs); break;
+            case 10: quit(fs); quit_flag=0; break;
             default: quit_flag = 0; break;
         }
         

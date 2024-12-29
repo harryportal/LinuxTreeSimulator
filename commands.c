@@ -157,17 +157,29 @@ int rmdir_(FileSystem *fs, const char *pathname){
     }
 
     Node *target = parentDir->childPtr, *prev = NULL;
-    while( target && strcmp(target->name, bname) != 0){
+    while (target) {
+        if (strcmp(target->name, bname) == 0) {
+            // we could possibly encounter a file with that name
+            if (target->type != DIR) {
+                // we have checked all the nodes
+                if (!target->siblingPtr) {
+                    printf("rmdir: %s: Not a directory\n", bname);
+                    return 1; 
+                }
+                // just skip and continue because we might still have a 
+                // file with that name
+                prev = target;
+                target = target->siblingPtr;
+                continue;
+            }
+            break; // File found
+        }
         prev = target;
         target = target->siblingPtr;
     }
 
     if(!target){
         printf("rmdir: %s: No such file or directory\n", bname);
-        return 1;
-    }
-    if(target->type != DIR){
-        printf("rmdir: %s: Not a directory\n", bname);
         return 1;
     }
     
@@ -214,17 +226,29 @@ int rm_(FileSystem *fs, const char *pathname){
     }
 
     Node *target = parentDir->childPtr, *prev = NULL;
-    while( target && strcmp(target->name, bname) != 0){
+    while (target) {
+        if (strcmp(target->name, bname) == 0) {
+            // we could possibly encounter a directory with that name
+            if (target->type != _FILE) {
+                // we have checked all the nodes
+                if (!target->siblingPtr) {
+                    printf("rm: %s: Not a file\n", bname);
+                    return 1; 
+                }
+                // just skip and continue because we might still have a 
+                // file with that name
+                prev = target;
+                target = target->siblingPtr;
+                continue;
+            }
+            break; // File found
+        }
         prev = target;
         target = target->siblingPtr;
     }
 
     if(!target){
         printf("rm: %s: No such file or directory\n", bname);
-        return 1;
-    }
-    if(target->type != _FILE){
-        printf("rm: %s: Not a file\n", bname);
         return 1;
     }
     
@@ -321,16 +345,24 @@ int reload(FileSystem *fs, const char *filename){
     }
 
     // read the first line away ( the fs would already be initialized )
-    char typename, pathname[128];  
-    fscanf(fp, "%c\t\t%s", &typename, pathname);
-    while (fscanf(fp, "%c\t\t%s", &typename, pathname)  == 2){
-        if(typename == 'D'){
-            mkdir_(fs, pathname);
-        }else{
-            creat(fs, pathname);
+    char typename, pathname[128], line[150];  
+    fgets(line, sizeof(line), fp);
+    while(fgets(line, sizeof(line), fp)){
+        // Remove trailing newline character
+        line[strcspn(line, "\n")] = 0;
+        if (sscanf(line, "%c %s", &typename, pathname) == 2) {
+            if(typename == 'D'){
+                mkdir_(fs, pathname);
+            }else{
+                creat(fs, pathname);
+            }
+        } 
+        else{
+            printf("Unable to read line in file: %s\n", filename);
+            return 1;
         }
     }
-    
+
     fclose(fp);
     return 0;
 }

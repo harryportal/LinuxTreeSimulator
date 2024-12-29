@@ -12,7 +12,16 @@ int cd_(FileSystem *fs, const char *pathname){
         fs->cwd = fs->root; 
         return 1;
     }
-   
+    
+    // extra: navigate to the immediate top level directory
+    if(strcmp(pathname, "..") == 0){
+        // if user at the root directory, just return the root(also the cwd)
+        if (fs->cwd->parentPtr) {
+            fs->cwd = fs->cwd->parentPtr;
+        }
+        return 0;
+    }
+
     char dname[ARR_S], bname[ARR_S]; 
     dbname(pathname, dname, bname);
 

@@ -35,7 +35,7 @@ void unixTreeSimulator(FileSystem *fs){
             case 8: save(fs, "DefaultFile.txt"); break;
             case 9: menu_(); break;
             case 10: quit(fs); quit_flag=0; break;
-            default: printf("command not found: %s/n", command); break;
+            default: printf("command not found: %s\n", command); break;
         }   
     }
     

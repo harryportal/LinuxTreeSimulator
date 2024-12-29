@@ -44,11 +44,9 @@
     ```bash
     ./unix_tree
     ```
+## Credits
+Shout out to this [repo](https://github.com/ayushtiwari/Linux-File-System-Tree). I don't think I would have gotten a quick headstart without seeing it's implementation. 
 
 ## Contributing
 
 Feel free to fork the repository and submit pull requests for improvements.
-
-## License
-
-This project is licensed under the MIT License.

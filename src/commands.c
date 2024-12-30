@@ -82,7 +82,6 @@ int mkdir_(FileSystem *fs, const char *pathname){
     Node *newDirNode = newNode(bname, DIR);
 
     if(!prev){
-        printf("This is a file!");
         parentDir->childPtr = newDirNode;
     }else {
         prev->siblingPtr = newDirNode; // prev points to the last node at this point.

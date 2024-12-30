@@ -4,8 +4,7 @@
 #include "commands.h"
 
 void unixTreeSimulator(FileSystem *fs){
-    // declare the varaibles
-  
+    menu_(); // the user should see available commands first
     int quit_flag = 1;
     while (quit_flag)
     {   

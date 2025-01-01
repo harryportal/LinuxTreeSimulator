@@ -56,9 +56,7 @@ Node* searchDir(FileSystem *fs, const char *pathname, const char *cmd){
     
     if(!curr){
         printf("%s: %s: Directory does not exist\n", cmd, pathname);
-    }
-
-    if(curr->type != DIR){
+    }else if(curr->type != DIR){
         printf("%s: %s: Not a directory\n", cmd, pathname);
     }
 

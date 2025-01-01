@@ -7,6 +7,17 @@
 const char *commands[] = {"mkdir", "rmdir", "ls", "cd", "pwd", "creat",
                          "rm", "reload", "save", "menu", "quit"};
 
+
+int validateAndExtractPaths(const char *pathname, char *dname, char *bname, const char *cmdName){
+    if(strlen(pathname) == 0){
+        printf("usage: %s <pathname>\n", cmdName);
+        return 0;
+    }
+
+    dbname(pathname, dname, bname);
+    return 1;
+}
+
 int cd_(FileSystem *fs, const char *pathname){
     if (!pathname || strcmp(pathname, "") == 0){
         fs->cwd = fs->root; 
@@ -58,14 +69,9 @@ int cd_(FileSystem *fs, const char *pathname){
 }
 
 int mkdir_(FileSystem *fs, const char *pathname){
-    if(strlen(pathname) == 0){
-        puts("usage: mkdir <pathname>");
-        return 1;
-    }
-
     char dname[ARR_S], bname[ARR_S]; 
-    dbname(pathname, dname, bname);
-
+    if(!validateAndExtractPaths(pathname,dname,bname, "mkdir")) return 1;
+   
     Node *parentDir = searchDir(fs,  dname, "mkdir");
     if(!parentDir) return 1;
     
@@ -91,14 +97,8 @@ int mkdir_(FileSystem *fs, const char *pathname){
 }
 
 int creat(FileSystem *fs, const char *pathname){
-    // same logic as mkdir except node type is _FILE
-    if(strlen(pathname) == 0){
-        puts("usage: create <pathname>");
-        return 1;
-    }
-
     char dname[ARR_S], bname[ARR_S]; 
-    dbname(pathname, dname, bname);
+    if(!validateAndExtractPaths(pathname,dname,bname, "creat")) return 1;
 
     Node *parentDir = searchDir(fs,  dname, "create");
     if(!parentDir) return 1;
@@ -125,13 +125,8 @@ int creat(FileSystem *fs, const char *pathname){
 }
 
 int rmdir_(FileSystem *fs, const char *pathname){
-    if(strlen(pathname) == 0){
-        puts("usage: rmdir <pathname>");
-        return 1;
-    }
-
-    char dname[ARR_S], bname[ARR_S];
-    dbname(pathname, dname, bname);
+    char dname[ARR_S], bname[ARR_S]; 
+    if(!validateAndExtractPaths(pathname,dname,bname, "rmdir")) return 1;
 
     Node *parentDir = searchDir(fs,  dname, "rmdir");
     if(!parentDir) return 1;
@@ -186,13 +181,8 @@ int rmdir_(FileSystem *fs, const char *pathname){
 int rm_(FileSystem *fs, const char *pathname){
     // Same as rmdir except we check if node is a file
     // We don't check for emptyness since this is file
-    if(strlen(pathname) == 0){
-        puts("usage: rm <pathname>");
-        return 1;
-    }
-
-    char dname[ARR_S], bname[ARR_S];
-    dbname(pathname, dname, bname);
+    char dname[ARR_S], bname[ARR_S]; 
+    if(!validateAndExtractPaths(pathname,dname,bname, "rm")) return 1;
 
     Node *parentDir = searchDir(fs,  dname, "rm");
     if(!parentDir) return 1;

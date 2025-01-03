@@ -26,18 +26,13 @@ void dbname(const char *pathName, char *dName, char *bName){
 
 Node* searchDir(FileSystem *fs, const char *pathname, const char *cmd){
     // check for cases to just simply return the cwd or root.
-    if(!pathname || !strcmp(pathname, ".")){
-        return fs->cwd;
-    } 
-    if(!strcmp(pathname, "/")){
-        return fs->root;
-    } 
-
-    // where do we start the search from? cwd or root?
+    if(!pathname || strcmp(pathname, ".") == 0) return fs->cwd;
+    if(strcmp(pathname, "/") == 0) return fs->root;
+    
+    // start from current working directory and only switch to root if entered pathname starts with "/".
     Node* curr = fs->cwd;
     if(pathname[0]=='/') curr = fs->root;
 
-     // now let the search begin ah ah
     char temp[64], *s;
     strcpy(temp, pathname); // using strtok for tokenization affects the original value
 
@@ -50,15 +45,11 @@ Node* searchDir(FileSystem *fs, const char *pathname, const char *cmd){
         s = strtok(NULL, "/");
     }
 
-    if(curr == fs->cwd || curr == fs->root){
-        curr = NULL;
-    }
+    // the directory is not found if after all the search above it's still pointing to the root.
+    if(curr == fs->root) curr = NULL;
     
-    if(!curr){
-        printf("%s: %s: Directory does not exist\n", cmd, pathname);
-    }else if(curr->type != DIR){
-        printf("%s: %s: Not a directory\n", cmd, pathname);
-    }
-
+    if(!curr) printf("%s: %s: Directory does not exist\n", cmd, pathname);
+    else if(curr->type != DIR) printf("%s: %s: Not a directory\n", cmd, pathname);
+    
     return curr;
 }

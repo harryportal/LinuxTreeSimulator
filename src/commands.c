@@ -24,9 +24,8 @@ int cd_(FileSystem *fs, const char *pathname){
         return 1;
     }
     
-    // extra: navigate to the immediate top level directory
+    // navigate to the immediate parent directory
     if(strcmp(pathname, "..") == 0){
-        // if user at the root directory, just return the root(also the cwd)
         if (fs->cwd->parentPtr) {
             fs->cwd = fs->cwd->parentPtr;
         }
@@ -35,35 +34,31 @@ int cd_(FileSystem *fs, const char *pathname){
 
     char dname[ARR_S], bname[ARR_S]; 
     dbname(pathname, dname, bname); 
-
+ 
     Node *parentDir = searchDir(fs,  dname, "cd");
     if(!parentDir) return 1;
 
-    Node *pointer = NULL;
-    // base directory could be empty
-    if(strcmp(bname, "") != 0 && strcmp(bname, "/") != 0){
-        pointer = parentDir->childPtr;
-        while(pointer){
-            if(strcmp(pointer->name, bname) == 0){
-                // could be a file but let's not judge till we've exhausted our search
-                if(pointer->type != DIR && !pointer->siblingPtr){
-                    printf("cd: %s: Not a directory\n", bname);
-                    return 1;
-                }
-                if(pointer->type == DIR){
-                    fs->cwd = pointer;
-                    return 0;
-                }
+    Node *pointer = parentDir->childPtr;
+    while(pointer){
+        if(strcmp(pointer->name, bname) == 0){
+            // could be a file but let's not judge till we've exhausted our search
+            if(pointer->type != DIR && !pointer->siblingPtr){
+                printf("cd: %s: Not a directory\n", bname);
+                return 1;
             }
-            pointer = pointer->siblingPtr;
+            if(pointer->type == DIR){
+                fs->cwd = pointer;
+                return 0;
+            }
         }
-
-        if(!pointer){
-            printf("cd: %s: Directory does not exist\n", bname);
-            return 1;
-        }
+        pointer = pointer->siblingPtr;
     }
 
+    if(!pointer){
+        printf("cd: %s: Directory does not exist\n", bname);
+        return 1;
+    }
+    
     fs->cwd = pointer? pointer:parentDir;
     return 0;
 }
@@ -130,11 +125,10 @@ int rmdir_(FileSystem *fs, const char *pathname){
 
     Node *parentDir = searchDir(fs,  dname, "rmdir");
     if(!parentDir) return 1;
-
     Node *target = parentDir->childPtr, *prev = NULL;
     while (target) {
         if (strcmp(target->name, bname) == 0) {
-            // we could possibly encounter a file with that name
+            // check if node is not a directory
             if (target->type != DIR) {
                 // we have checked all the nodes
                 if (!target->siblingPtr) {
@@ -142,12 +136,12 @@ int rmdir_(FileSystem *fs, const char *pathname){
                     return 1; 
                 }
                 // just skip and continue because we might still have a 
-                // file with that name
+                // directory with that name
                 prev = target;
                 target = target->siblingPtr;
                 continue;
             }
-            break; // File found
+            break; // directory found
         }
         prev = target;
         target = target->siblingPtr;

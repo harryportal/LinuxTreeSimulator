@@ -231,7 +231,7 @@ int save(FileSystem *fs, const char *filename){
     }
 
     // now we've opened the file, what next?
-    fprintf(fptr, "%s\t\t%s\n", fs->root->type == _FILE? "F": "D", "/");
+    fprintf(fptr, "%s\t\t%s\n", "D", "/");
     saveUtil(fs->root->childPtr, fptr, "");
     fclose(fptr);
     return 0;
@@ -261,17 +261,14 @@ int ls_(FileSystem *fs, const char *pathname){
     Node *parentDir = searchDir(fs,  dname, "ls");
     if(!parentDir) return 1;
     
-    Node *pointer = parentDir;
-    if(strcmp(bname, ".") != 0 && strcmp(bname, "/") != 0){
-        pointer = pointer->childPtr;
-        while(pointer && strcmp(pointer->name, bname) != 0) pointer = pointer->siblingPtr;
+    Node *pointer = pointer->childPtr;    
+    while(pointer && strcmp(pointer->name, bname) != 0) pointer = pointer->siblingPtr;
 
-        if(!pointer){
-            printf("ls: %s: No such file or directory\n", bname);
-            return 1;
-        }
+    if(!pointer){
+        printf("ls: %s: No such file or directory\n", bname);
+        return 1;
     }
-
+    
     if(pointer->type == DIR){
         Node *t = pointer->childPtr;
         while(t){

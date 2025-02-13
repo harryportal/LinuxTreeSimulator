@@ -21,9 +21,6 @@ typedef struct _FileSystem {
 // create a new node for a directory or file
 Node* newNode(const char *basename, const nodeType type); 
 
-// initialize the filesystem root and current working directory
-void initialize(FileSystem *fs);
-
 // extract directory and base from a pathname
 void dbname(const char *pathname, char *dname, char *bname);
 

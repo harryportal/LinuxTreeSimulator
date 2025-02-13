@@ -42,7 +42,7 @@ void unixTreeSimulator(FileSystem *fs){
 
 int main(){
     FileSystem fs;
-    initialize(&fs);
+    fs.root = fs.cwd = newNode("/", DIR); // initialize root to cwd.
     unixTreeSimulator(&fs);
     return 0;
 }

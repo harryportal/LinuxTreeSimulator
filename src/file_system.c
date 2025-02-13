@@ -12,10 +12,6 @@ Node* newNode(const char *basename, const nodeType type){
     return node;
 }
 
-void initialize(FileSystem *fs){
-    fs->root = fs->cwd = newNode("/", DIR);
-}
-
 void dbname(const char *pathName, char *dName, char *bName){
     char temp[128];
     strcpy(temp, pathName);
@@ -26,8 +22,8 @@ void dbname(const char *pathName, char *dName, char *bName){
 
 Node* searchDir(FileSystem *fs, const char *pathname, const char *cmd){
     // check for cases to just simply return the cwd or root.
-    if(!pathname || strcmp(pathname, ".") == 0) return fs->cwd;
-    if(strcmp(pathname, "/") == 0) return fs->root;
+    if(!pathname || strcmp(pathname, ".") == 0) return fs->cwd;    // cd new old fds pdf
+    if(strcmp(pathname, "/") == 0) return fs->root; // 
     
     // start from current working directory and only switch to root if entered pathname starts with "/".
     Node* curr = fs->cwd;

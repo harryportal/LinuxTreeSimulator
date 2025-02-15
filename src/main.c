@@ -20,6 +20,9 @@ void unixTreeSimulator(FileSystem *fs){
         // push the commmand and pathname
         sscanf(line, "%s %s", command, pathName);
         int cmdIndex = findCmd(command);
+        if( cmdIndex < 0 || cmdIndex > 10){
+            printf("command not found: %s\n", command); // early exit.
+        }
         switch(cmdIndex){
             case 0: mkdir_(fs, pathName); break;
             case 1: rmdir_(fs, pathName); break;
@@ -34,7 +37,7 @@ void unixTreeSimulator(FileSystem *fs){
             case 8: save(fs, "DefaultFile.txt"); break;
             case 9: menu_(); break;
             case 10: quit(fs); quit_flag=0; break;
-            default: printf("command not found: %s\n", command); break;
+            default: break;
         }   
     }
     

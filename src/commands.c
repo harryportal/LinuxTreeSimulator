@@ -18,9 +18,101 @@ int validateAndExtractPaths(const char *pathname, char *dname, char *bname, cons
     return 1;
 }
 
+static int createHelper(FileSystem *fs, const char *pathname, const nodeType nodeType){
+    char dname[ARR_S], bname[ARR_S]; 
+    const char *cmd = nodeType == DIR? "mkdir":"creat";
+    if(!validateAndExtractPaths(pathname,dname,bname,cmd)) return 1;
+    Node *parentDir = searchDir(fs,dname,cmd);
+    if(!parentDir) return 1;
+    
+    Node *curr = parentDir->childPtr, *prev = NULL;
+    while(curr){ 
+        if(strcmp(curr->name, bname) == 0 && curr->type == nodeType){
+            const char *fileType = nodeType == DIR?"Directory":"file";
+            printf("%s: %s: %s exists\n", bname, cmd, fileType);
+            return 1;
+        }
+        prev = curr;
+        curr = curr->siblingPtr;
+    }
+
+    Node *newDirNode = newNode(bname, nodeType);
+
+    if(!prev){  // if directory is empty.
+        parentDir->childPtr = newDirNode;
+    }else {
+        prev->siblingPtr = newDirNode; // prev points to the last node at this point.
+    }
+    newDirNode->parentPtr = parentDir;
+    return 0;
+}
+
+static int removeHelper(FileSystem *fs, const char *pathname, const nodeType nodeType){
+    char dname[ARR_S], bname[ARR_S]; 
+    const char *cmd = nodeType == DIR? "rmdir": "rm";
+    if(!validateAndExtractPaths(pathname,dname,bname,cmd)) return 1;
+
+    Node *parentDir = searchDir(fs,dname,cmd);
+    if(!parentDir) return 1;
+    Node *target = parentDir->childPtr, *prev = NULL;
+    while (target) {
+        if (strcmp(target->name, bname) == 0) {
+            if(target->type == nodeType) break; // directory found
+
+            // not a directory and search exhausted
+            if (target->type != nodeType && !target->siblingPtr) {
+                char *fileType = nodeType == DIR ? "directory": "file";
+                printf("%s: %s: Not a %s\n", cmd, bname, fileType);
+                return 1; 
+            }
+        }
+        prev = target;
+        target = target->siblingPtr;
+    }
+
+    if(!target){
+        printf("rmdir: %s: No such file or directory\n", bname);
+        return 1;
+    }
+    
+    // Directory must be empty before deleted
+    if(nodeType == DIR && target->childPtr){
+        printf("rmdir: %s: Cannot remove non-empty directory\n", bname);
+        return 1;
+    }
+
+    if(prev){
+        // the directory is not the oldest in the parent directory
+        // so we shift pointers skipping the target directory
+        prev->siblingPtr = target->siblingPtr;
+    }else {
+        // the only time where prev is NULL is when the target is the childPtr
+        parentDir->childPtr = target->siblingPtr;
+    }
+
+    free(target);
+    return 0;
+}
+
+int mkdir_(FileSystem *fs, const char *pathname){
+    return createHelper(fs, pathname, DIR);
+}
+
+int creat(FileSystem *fs, const char *pathname){
+    return createHelper(fs, pathname, _FILE);
+}
+
+int rmdir_(FileSystem *fs, const char *pathname){
+    return removeHelper(fs, pathname, DIR);
+}
+
+int rm_(FileSystem *fs, const char *pathname){
+    return removeHelper(fs, pathname, _FILE);
+}
+
 int cd_(FileSystem *fs, const char *pathname){
-    if (!pathname || strcmp(pathname, "") == 0){
-        fs->cwd = fs->root; 
+    if (!pathname || strcmp(pathname, "") == 0 || strcmp(pathname, "/")){
+        fs->cwd = fs->root; // this is what UNIX does.
         return 1;
     }
     
@@ -35,7 +127,7 @@ int cd_(FileSystem *fs, const char *pathname){
     char dname[ARR_S], bname[ARR_S]; 
     dbname(pathname, dname, bname); 
  
-    Node *parentDir = searchDir(fs,  dname, "cd");
+    Node *parentDir = searchDir(fs, dname, "cd");
     if(!parentDir) return 1;
 
     Node *pointer = parentDir->childPtr;
@@ -54,168 +146,8 @@ int cd_(FileSystem *fs, const char *pathname){
         pointer = pointer->siblingPtr;
     }
 
-    if(!pointer){
-        printf("cd: %s: Directory does not exist\n", bname);
-        return 1;
-    }
-    
-    //fs->cwd = pointer? pointer:parentDir;
-    return 0;
-}
-
-int mkdir_(FileSystem *fs, const char *pathname){
-    char dname[ARR_S], bname[ARR_S]; 
-    if(!validateAndExtractPaths(pathname,dname,bname, "mkdir")) return 1;
-   
-    Node *parentDir = searchDir(fs,  dname, "mkdir");
-    if(!parentDir) return 1;
-    
-    Node *curr = parentDir->childPtr, *prev = NULL;
-    while(curr){ 
-        if(strcmp(curr->name, bname) == 0 && curr->type == DIR){
-            printf("mkdir: %s: Directory exists\n", bname);
-            return 1;
-        }
-        prev = curr;
-        curr = curr->siblingPtr;
-    }
-
-    Node *newDirNode = newNode(bname, DIR);
-
-    if(!prev){  // if directory is empty.
-        parentDir->childPtr = newDirNode;
-    }else {
-        prev->siblingPtr = newDirNode; // prev points to the last node at this point.
-    }
-    newDirNode->parentPtr = parentDir;
-    return 0;
-}
-
-int creat(FileSystem *fs, const char *pathname){
-    char dname[ARR_S], bname[ARR_S]; 
-    if(!validateAndExtractPaths(pathname,dname,bname, "creat")) return 1;
-
-    Node *parentDir = searchDir(fs,  dname, "create");
-    if(!parentDir) return 1;
-
-    Node *curr = parentDir->childPtr, *prev = NULL;
-    while(curr){ 
-        if(strcmp(curr->name, bname) == 0 && curr->type == _FILE){
-            printf("mkdir: %s: Directory exists\n", bname);
-            return 1;
-        }
-        prev = curr;
-        curr = curr->siblingPtr;
-    }
-
-    Node *newDirNode = newNode(bname, _FILE);
-
-    if(!prev){
-        parentDir->childPtr = newDirNode;
-    }else {
-        prev->siblingPtr = newDirNode; // prev points to the last node at this point.
-    }
-    newDirNode->parentPtr = parentDir;
-    return 0;
-}
-
-int rmdir_(FileSystem *fs, const char *pathname){
-    char dname[ARR_S], bname[ARR_S]; 
-    if(!validateAndExtractPaths(pathname,dname,bname, "rmdir")) return 1;
-
-    Node *parentDir = searchDir(fs,  dname, "rmdir");
-    if(!parentDir) return 1;
-    Node *target = parentDir->childPtr, *prev = NULL;
-    while (target) {
-        if (strcmp(target->name, bname) == 0) {
-            // check if node is not a directory
-            if (target->type != DIR) {
-                // we have checked all the nodes
-                if (!target->siblingPtr) {
-                    printf("rmdir: %s: Not a directory\n", bname);
-                    return 1; 
-                }
-                // just skip and continue because we might still have a 
-                // directory with that name
-                prev = target;
-                target = target->siblingPtr;
-                continue;
-            }
-            break; // directory found
-        }
-        prev = target;
-        target = target->siblingPtr;
-    }
-
-    if(!target){
-        printf("rmdir: %s: No such file or directory\n", bname);
-        return 1;
-    }
-    
-    // Directory must be empty before deleted
-    if(target->childPtr){
-        printf("rmdir: %s: Cannot remove non-empty directory\n", bname);
-        return 1;
-    }
-
-    if(prev){
-        // the directory is not the oldest in the parent directory
-        // so we shift pointers skipping the target directory
-        prev->siblingPtr = target->siblingPtr;
-    }else {
-        // the only time where prev is NULL is when the target is the childPtr
-        parentDir->childPtr = target->siblingPtr;
-    }
-
-    free(target);
-    return 0;
-}
-
-
-int rm_(FileSystem *fs, const char *pathname){
-    // Same as rmdir except we check if node is a file
-    // We don't check for emptyness since this is file
-    char dname[ARR_S], bname[ARR_S]; 
-    if(!validateAndExtractPaths(pathname,dname,bname, "rm")) return 1;
-
-    Node *parentDir = searchDir(fs,  dname, "rm");
-    if(!parentDir) return 1;
-
-    Node *target = parentDir->childPtr, *prev = NULL;
-    while (target) {
-        if (strcmp(target->name, bname) == 0) {
-            // we could possibly encounter a directory with that name
-            if (target->type != _FILE) {
-                // we have checked all the nodes
-                if (!target->siblingPtr) {
-                    printf("rm: %s: Not a file\n", bname);
-                    return 1; 
-                }
-                // just skip and continue because we might still have a 
-                // file with that name
-                prev = target;
-                target = target->siblingPtr;
-                continue;
-            }
-            break; // File found
-        }
-        prev = target;
-        target = target->siblingPtr;
-    }
-
-    if(!target){
-        printf("rm: %s: No such file or directory\n", bname);
-        return 1;
-    }
-    
-    if(prev){
-        prev->siblingPtr = target->siblingPtr;
-    }else {
-        parentDir->childPtr = target->siblingPtr;
-    }
-
-    free(target);
-    return 0;
+    printf("cd: %s: Directory does not exist\n", bname);
+    return 1;
 }
 
 int save(FileSystem *fs, const char *filename){
@@ -261,7 +193,7 @@ int ls_(FileSystem *fs, const char *pathname){
     
     Node *pointer = parentDir; 
     
-    if((strcmp(bname, ".") != 0 && strcmp(bname, "/") != 0 )){
+    if((strcmp(pathname, ".") != 0 && strcmp(pathname, "/") != 0 )){
         pointer = parentDir->childPtr; 
         while(pointer && strcmp(pointer->name, bname) != 0) pointer = pointer->siblingPtr;
         if(!pointer){
@@ -278,7 +210,7 @@ int ls_(FileSystem *fs, const char *pathname){
         } 
         printf("\n");
     }else {
-        printf("%s\t\n", pointer->name);
+        printf("%s\n", pointer->name);
     }
 
     return 0;
